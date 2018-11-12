@@ -3,5 +3,12 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LogistLibrary"/>
+	<classpathentry kind="lib" path="logist/logist.jar"/>
+	<classpathentry kind="lib" path="logist/lib/colt.jar"/>
+	<classpathentry kind="lib" path="logist/lib/commons-math-1.1.jar"/>
+	<classpathentry kind="lib" path="logist/lib/jdom.jar"/>
+	<classpathentry kind="lib" path="logist/lib/jsolver.jar"/>
+	<classpathentry kind="lib" path="logist/lib/plot.jar"/>
+	<classpathentry kind="lib" path="logist/lib/repast.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
