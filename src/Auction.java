@@ -33,7 +33,9 @@ public class Auction implements AuctionBehavior {
 	private long timeout_setup;
 	private long timeout_plan;
 	private long timeout_bid;
-	private Solution currentSolution;
+	
+	private Solution currentSolutionProposition; // The solution we're proposing
+	private Solution currentSolution; // The solution we're actually going with
 	private static final int AMOUNT_OF_SOLUTIONS_KEPT_IN_SLS = 10;
 
 	@Override
@@ -59,12 +61,16 @@ public class Auction implements AuctionBehavior {
 		this.agent = agent;
 		// TODO : Compute the StateActionTable (Simon)
 		this.stateActionTable = new StateActionTable();
-		this.currentSolution = null;
+		this.currentSolution = new Solution(this.agent.vehicles());
+		this.currentSolutionProposition = null;
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// TODO : Make the agent handle the new task IF it won the auctions
+		if (winner == this.agent.id()) {
+			this.currentSolution = this.currentSolutionProposition;
+		}
 	}
 
 	@Override
@@ -78,19 +84,20 @@ public class Auction implements AuctionBehavior {
 		System.out.println("[START] : Bid for :  " + task);
 
 		// 1. For EACH AGENT, find the best solutions according to centralized (Arthur)
+		// TODO: Add the "each agent" component
 		TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 		tasksWithAuctionedTask.add(task);
 		SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid,
 				Auction.AMOUNT_OF_SOLUTIONS_KEPT_IN_SLS);
-		Solution solution = sls.getSolutions().getFirstSolution();
+		SolutionList solutions = sls.getSolutions();
 
 		// 2. Use this.stateActionTable to discriminate the solutions of each agent,
 		// selecting the best one (Simon)
-		this.currentSolution = solution;
+		this.currentSolutionProposition = solutions.getFirstSolution();
 
 		// 3. Place a bid according to results (Simon)
 
-		long bid = Long.MIN_VALUE;
+		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
 		return bid;
 	}
 
@@ -99,6 +106,10 @@ public class Auction implements AuctionBehavior {
 
 		// TODO use the results of askPrice to output the plans (Arthur)
 		ArrayList<Plan> plans = new ArrayList<Plan>();
+		
+		for (Vehicle v : vehicles) {
+			plans.add(new Plan(v.getCurrentCity(), this.currentSolution.getVehicleAgendas().get(v)));
+		}
 		return plans;
 	}
 }

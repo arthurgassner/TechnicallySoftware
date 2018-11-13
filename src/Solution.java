@@ -18,26 +18,30 @@ public class Solution {
 	private final List<Vehicle> vehicles;
 	public final double totalCost;
 
-	public Solution(List<Vehicle> vehicles, HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) { // Why do
-																												// you
-																												// pass
-																												// two
-																												// arguments
-																												// here
-																												// ?
-		this.simpleVehicleAgendas = simpleVehicleAgendas;
-		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteTaskList();
-		this.totalCost = this.getTotalCost();
-	}
-
 	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
 		this.simpleVehicleAgendas = simpleVehicleAgendas;
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
 		vehicles.addAll(simpleVehicleAgendas.keySet());
 		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteTaskList();
+		this.vehicleAgendas = generateCompleteAgendas();
 		this.totalCost = this.getTotalCost();
+	}
+	
+	/**
+	 * Construct a solution where all the vehicles do NOTHING.
+	 * No tasks is handled here.
+	 * The cost is 0 since NOTHING is done.
+	 * @param vehicles
+	 */
+	public Solution(List<Vehicle> vehicles) {
+		this.simpleVehicleAgendas = new HashMap<Vehicle, ArrayList<TaskWrapper>>();
+		for (Vehicle v : vehicles) {
+			this.simpleVehicleAgendas.put(v, new ArrayList<TaskWrapper>());
+		}
+		
+		this.vehicles = vehicles;
+		this.vehicleAgendas = generateCompleteAgendas();
+		this.totalCost = 0;
 	}
 
 	// TODO make methods for handy neighboring solution generation
@@ -76,7 +80,7 @@ public class Solution {
 		return totalCostOfThisSolution;
 	}
 
-	private HashMap<Vehicle, ArrayList<Action>> generateCompleteTaskList() {
+	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas() {
 
 		HashMap<Vehicle, ArrayList<Action>> completeVehicleAgenda = new HashMap<Vehicle, ArrayList<Action>>();
 
