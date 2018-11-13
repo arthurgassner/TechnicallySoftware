@@ -44,7 +44,6 @@ public class Solution {
 		this.totalCost = 0;
 	}
 
-	// TODO make methods for handy neighboring solution generation
 	public ArrayList<Vehicle> getVehicles() {
 		return new ArrayList<Vehicle>(this.vehicles);
 	}

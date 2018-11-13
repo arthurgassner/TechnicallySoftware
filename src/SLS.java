@@ -79,17 +79,9 @@ public class SLS {
 			} else {
 				this.repeatCount++;
 			}
-			
-			
 
 			// Choose which solution to use to generate neighbors
 			solutionGeneratingNeighbors = this.localChoice(neighbors, localMins.getFirstSolution(), solutionGeneratingNeighbors);
-			System.out.print("Current costs : ");
-			for (Solution s : this.solutions.getAll()) {
-				System.out.print(s.totalCost);
-				System.out.print(" - ");
-			}
-			System.out.println();
 			diffTime = System.currentTimeMillis() - this.startTime;
 		}
 		
@@ -100,7 +92,7 @@ public class SLS {
 		}
 		System.out.println();
 		
-		System.out.print("AGENDAS : ");
+		System.out.println("AGENDAS : ");
 		for (Solution s : this.solutions.getAll()) {
 			for (Vehicle v : s.getSimpleVehicleAgendas().keySet()) {
 				System.out.print(v + " : ");
@@ -110,7 +102,6 @@ public class SLS {
 				}
 				System.out.println();
 			}
-			System.out.println();
 			System.out.println();
 		}
 		System.out.println();

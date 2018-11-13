@@ -33,10 +33,10 @@ public class Auction implements AuctionBehavior {
 	private long timeout_setup;
 	private long timeout_plan;
 	private long timeout_bid;
-	
+
 	private Solution currentSolutionProposition; // The solution we're proposing
 	private Solution currentSolution; // The solution we're actually going with
-	private static final int AMOUNT_OF_SOLUTIONS_KEPT_IN_SLS = 10;
+	private static final int AMOUNT_SOLUTIONS_KEPT_BY_SLS = 2;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -88,7 +88,7 @@ public class Auction implements AuctionBehavior {
 		TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 		tasksWithAuctionedTask.add(task);
 		SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid,
-				Auction.AMOUNT_OF_SOLUTIONS_KEPT_IN_SLS);
+				Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
 		SolutionList solutions = sls.getSolutions();
 
 		// 2. Use this.stateActionTable to discriminate the solutions of each agent,
@@ -96,8 +96,9 @@ public class Auction implements AuctionBehavior {
 		this.currentSolutionProposition = solutions.getFirstSolution();
 
 		// 3. Place a bid according to results (Simon)
-
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
+		System.out.println("BID : " + bid);
+		System.out.println();
 		return bid;
 	}
 
@@ -106,7 +107,7 @@ public class Auction implements AuctionBehavior {
 
 		// TODO use the results of askPrice to output the plans (Arthur)
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-		
+
 		for (Vehicle v : vehicles) {
 			plans.add(new Plan(v.getCurrentCity(), this.currentSolution.getVehicleAgendas().get(v)));
 		}
