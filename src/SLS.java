@@ -99,6 +99,21 @@ public class SLS {
 			System.out.print(" - ");
 		}
 		System.out.println();
+		
+		System.out.print("AGENDAS : ");
+		for (Solution s : this.solutions.getAll()) {
+			for (Vehicle v : s.getSimpleVehicleAgendas().keySet()) {
+				System.out.print(v + " : ");
+				for (TaskWrapper tw : s.getSimpleVehicleAgendas().get(v)) {
+					System.out.print(tw);
+					System.out.print(" => ");
+				}
+				System.out.println();
+			}
+			System.out.println();
+			System.out.println();
+		}
+		System.out.println();
 
 	}
 

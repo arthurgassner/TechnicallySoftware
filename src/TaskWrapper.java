@@ -52,4 +52,12 @@ public class TaskWrapper {
 		TaskWrapper taskWrapper = (TaskWrapper) that;
 		return (this.task == taskWrapper.task) && (this.pickup == taskWrapper.pickup);
 	}
+	
+	@Override
+	public String toString() {
+		String s;
+		s = this.isPickup() ? "PICKUP" : "DELIVER";
+		s += " (" + this.getEndCity() + ")";
+		return s;
+	}
 }

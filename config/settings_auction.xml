@@ -24,7 +24,7 @@
 	<!-- Timeouts -->
 	<set timeout-setup="5000" />
 	<set timeout-plan="5000" />
-	<set timeout-bid="3000" />
+	<set timeout-bid="2000" />
 	
 	<!-- Flags -->
 	<set flag-show-ui="true" />
