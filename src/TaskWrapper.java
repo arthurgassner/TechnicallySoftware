@@ -49,8 +49,8 @@ public class TaskWrapper {
 	public boolean equals(Object that) {
 		if (!(that instanceof TaskWrapper))
 			return false;
-		TaskWrapper taskWrapper = (TaskWrapper) that;
-		return (this.task == taskWrapper.task) && (this.pickup == taskWrapper.pickup);
+		TaskWrapper tw = (TaskWrapper) that;
+		return (this.task.id == tw.task.id) && (this.pickup == tw.pickup);
 	}
 	
 	@Override

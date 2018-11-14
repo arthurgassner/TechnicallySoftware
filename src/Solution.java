@@ -156,7 +156,9 @@ public class Solution {
 			}
 			
 			for (int i = 0;i < this.simpleVehicleAgendas.get(v).size(); i++) {
-				if (this.simpleVehicleAgendas.get(v).get(i) != s.simpleVehicleAgendas.get(v).get(i)) {
+				TaskWrapper tw1 = this.simpleVehicleAgendas.get(v).get(i);
+				TaskWrapper tw2 = s.simpleVehicleAgendas.get(v).get(i);
+				if (!tw1.equals(tw2)) {
 					return false;
 				}
 			}

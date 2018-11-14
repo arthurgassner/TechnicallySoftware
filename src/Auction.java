@@ -2,6 +2,7 @@
 //the list of imports
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -36,7 +37,8 @@ public class Auction implements AuctionBehavior {
 
 	private Solution currentSolutionProposition; // The solution we're proposing
 	private Solution currentSolution; // The solution we're actually going with
-	private static final int AMOUNT_SOLUTIONS_KEPT_BY_SLS = 2;
+	private static final int AMOUNT_SOLUTIONS_KEPT_BY_SLS = 100;
+	private HashSet<Task> tasksToHandle;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -63,12 +65,14 @@ public class Auction implements AuctionBehavior {
 		this.stateActionTable = new StateActionTable();
 		this.currentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
+		this.tasksToHandle = new HashSet<Task>();
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// TODO : Make the agent handle the new task IF it won the auctions
 		if (winner == this.agent.id()) {
+			this.tasksToHandle.add(previous);
 			this.currentSolution = this.currentSolutionProposition;
 		}
 	}
