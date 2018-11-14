@@ -103,18 +103,21 @@ public class Auction implements AuctionBehavior {
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
 		System.out.println("BID : " + bid);
 		System.out.println();
-		return bid;
+		bid = bid < 0 ? -bid : bid;
+		return bid/2;
 	}
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 
 		// TODO use the results of askPrice to output the plans (Arthur)
+		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-
+		SLS sls = new SLS(vehicles, tasks, this.timeout_bid,
+				Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
 		for (Vehicle v : vehicles) {
-			plans.add(new Plan(v.getCurrentCity(), this.currentSolution.getVehicleAgendas().get(v)));
+			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
 		}
-		return plans;
+				return plans;
 	}
 }

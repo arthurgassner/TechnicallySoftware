@@ -28,7 +28,7 @@
 	
 		<company name="Company A">
 			<!-- the first vehicle (blue) -->
-			<vehicle name="Vehicle 1">
+			<vehicle name="Vehicle 1-MAIN">
 				<set color="#0000ff" />
 				<set home="Newcastle" />
 				<set speed="90" />
@@ -37,7 +37,7 @@
 			</vehicle>
 			
 			<!-- the second vehicle (red) -->
-			<vehicle name="Vehicle 2">
+			<vehicle name="Vehicle 2-MAIN">
 				<set color="#ff0000" />
 				<set home="London" />
 				<set speed="90" />
