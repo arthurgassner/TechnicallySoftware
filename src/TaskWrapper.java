@@ -56,8 +56,11 @@ public class TaskWrapper {
 	@Override
 	public String toString() {
 		String s;
-		s = this.isPickup() ? "PICKUP" : "DELIVER";
+		s = this.isPickup() ? "PICKUP " : "DELIVER";
 		s += " (" + this.getEndCity() + ")";
+		for (int i = 0; i < 10 - this.getEndCity().toString().length();i++) {
+			s += " ";
+		}
 		return s;
 	}
 }
