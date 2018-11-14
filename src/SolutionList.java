@@ -20,7 +20,7 @@ public class SolutionList {
 	private final int maxAmountOfSolutions;
 
 	/**
-	 * Construct a solutionlist without any solution
+	 * Construct a solutionlist holding no solution at all.
 	 * 
 	 * @param amountOfSolutions
 	 */
