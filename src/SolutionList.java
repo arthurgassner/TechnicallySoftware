@@ -2,10 +2,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * A list of solution with a fixed amount of elements.
+ * An ordered list of solutions.
+ * 
+ * The amount of solutions that can be held 
+ * by a SolutionList is limited by the SolutionList's  maxAmountOfSolutions
+ * 
  * Each element of the list is unique.
+ * 
  * The list is ordered so
- * that the solution with the lowest total cost is the first element, and so on
+ * that the solution with the lowest total cost is the first element, and so on.
  * 
  * @author heimdall
  *
@@ -56,8 +61,10 @@ public class SolutionList {
 	 * If s can be added, 
 	 * it is added to this SolutionList's solutions just after (from left to right)
 	 * the last solution (from left to right) whose cost is <= s's totalCost
+	 * For instance, the insertion of a Solution whose cost is 8 :
+	 * [2, 3, 8, 8, 8, 9, 11] => [2, 3, 8, 8, 8, *8*, 9, 11]
 	 * If s cannot be added (lack of space given s.totalCost), s is not added
-	 * @param s
+	 * @param s Solution to be added
 	 * @return true is s has been added successfully, false otherwise 
 	 */
 	public boolean add(Solution s) {
