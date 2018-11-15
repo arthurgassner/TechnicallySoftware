@@ -30,7 +30,7 @@ public class Auction implements AuctionBehavior {
 	private TaskDistribution distribution;
 	private Agent agent;
 
-	private StateActionTable stateActionTable;
+	private StateActionTables stateActionTables;
 	private long timeout_setup;
 	private long timeout_plan;
 	private long timeout_bid;
@@ -58,11 +58,21 @@ public class Auction implements AuctionBehavior {
 		// the bid method cannot execute more than timeout_bid milliseconds
 		timeout_bid = ls.get(LogistSettings.TimeoutKey.BID);
 
+		
+		/*
+		 * I didn't make class vars for these since currently they are only used once to initialize stateActionTable
+		 * If we want to change more than just the discount factor of the stateActionTable, we may need to reinitialize
+		 * and then we may want local copies of the vars from  the xml
+		*/
+		double gamma = agent.readProperty("discount-factor", Double.class,0.95);
+		double threshold = agent.readProperty("convergence-threshold", Double.class,0.01);
+		int maxNumTasks = agent.readProperty("max-tasks", Integer.class,50);
+		
 		this.topology = topology;
 		this.distribution = distribution;
 		this.agent = agent;
 		// TODO : Compute the StateActionTable (Simon)
-		this.stateActionTable = new StateActionTable();
+		this.stateActionTables = new StateActionTables(topology, distribution, gamma,maxNumTasks,threshold,this.agent.vehicles(),2);
 		this.currentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
 		this.tasksToHandle = new HashSet<Task>();

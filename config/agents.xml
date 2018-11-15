@@ -12,6 +12,9 @@
 	<agent name="auction-main-76">
 		<set class-path="bin/"/>
 		<set class-name="Auction"/>
+		<set discount-factor=".5"/>
+		<set convergence-threshold="0.01"/>
+		<set max-tasks="50"/>
 	</agent>
 	
 	
