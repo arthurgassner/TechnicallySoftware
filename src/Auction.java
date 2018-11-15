@@ -71,6 +71,13 @@ public class Auction implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// TODO : Make the agent handle the new task IF it won the auctions
+		System.out.print("[BID] : ");
+		for (Long bid : bids) {
+			System.out.print(bid + " ");
+		}
+		System.out.println();
+		System.out.println();
+
 		if (winner == this.agent.id()) {
 			this.tasksToHandle.add(previous);
 			this.currentSolution = this.currentSolutionProposition;
@@ -101,23 +108,31 @@ public class Auction implements AuctionBehavior {
 
 		// 3. Place a bid according to results (Simon)
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
-		System.out.println("BID : " + bid);
-		System.out.println();
 		bid = bid < 0 ? -bid : bid;
-		return bid/2;
+		System.out.println("[MY BID] : " + bid);
+		return bid;
 	}
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-
+		System.out.println();
+		System.out.println("START PLANNING");
 		// TODO use the results of askPrice to output the plans (Arthur)
 		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-		SLS sls = new SLS(vehicles, tasks, this.timeout_bid,
-				Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
+		SLS sls = new SLS(vehicles, tasks, this.timeout_bid, Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
 		for (Vehicle v : vehicles) {
 			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
 		}
-				return plans;
+		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
+		long total_reward = 0;
+		for (Task t : tasks) {
+			total_reward += t.reward;
+		}
+		System.out.println("TOTAL REWARD : " + total_reward);
+		System.out.println("TOTAL PROFIT : " + (total_reward - sls.getSolutions().getFirstSolution().totalCost));
+
+		System.out.println();
+		return plans;
 	}
 }
