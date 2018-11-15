@@ -5,3 +5,7 @@
 		<agent name="auction-main-76">
 			<vehicle name="Vehicle 1-MAIN"/>
 			<vehicle name="Vehicle 2-MAIN"/>
+		</agent>
+		<agent name="auction-random">
+			<vehicle name="Vehicle 3"/>
+			<vehicle name="Vehicle 4"/>

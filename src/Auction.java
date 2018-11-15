@@ -116,7 +116,7 @@ public class Auction implements AuctionBehavior {
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		System.out.println();
-		System.out.println("START PLANNING");
+		System.out.println("START PLANNING [" + tasks.size() + "tasks ]");
 		// TODO use the results of askPrice to output the plans (Arthur)
 		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
@@ -125,12 +125,8 @@ public class Auction implements AuctionBehavior {
 			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
 		}
 		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
-		long total_reward = 0;
-		for (Task t : tasks) {
-			total_reward += t.reward;
-		}
-		System.out.println("TOTAL REWARD : " + total_reward);
-		System.out.println("TOTAL PROFIT : " + (total_reward - sls.getSolutions().getFirstSolution().totalCost));
+		System.out.println("TOTAL REWARD : " + tasks.rewardSum());
+		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - sls.getSolutions().getFirstSolution().totalCost));
 
 		System.out.println();
 		return plans;
