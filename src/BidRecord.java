@@ -11,11 +11,13 @@ import java.util.Collections;
  * @author heimdall
  *
  */
-public class BidTimeline {
+public class BidRecord {
 	private ArrayList<ArrayList<Long>> bids;
 	private ArrayList<Integer> winners;
 
-	public BidTimeline() {
+	public BidRecord() {
+		this.bids = new ArrayList<ArrayList<Long>>();
+		this.winners = new ArrayList<Integer>();
 	}
 
 	/**
@@ -25,7 +27,7 @@ public class BidTimeline {
 	 */
 	public void recordBids(int winner, Long[] bids) {
 		this.winners.add(winner);
-		this.bids.add((ArrayList<Long>) Arrays.asList(bids));
+		this.bids.add(new ArrayList<Long>(Arrays.asList(bids)));
 	}
 
 	/**
@@ -47,12 +49,11 @@ public class BidTimeline {
 		long total_reward = 0; 
 		int current_round = 0;
 		for (int id : this.winners) {
-			current_round++;
 			if (id == agentID) {
 				total_reward += Collections.min(this.bids.get(current_round));
 			}
+			current_round++;
 		}
 		return total_reward;
 	}
-
 }

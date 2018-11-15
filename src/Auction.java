@@ -3,8 +3,10 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import logist.LogistSettings;
 import logist.Measures;
@@ -29,6 +31,7 @@ public class Auction implements AuctionBehavior {
 	private Topology topology;
 	private TaskDistribution distribution;
 	private Agent agent;
+	private BidRecord bidRecord;
 
 	private StateActionTable stateActionTable;
 	private long timeout_setup;
@@ -66,11 +69,13 @@ public class Auction implements AuctionBehavior {
 		this.currentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
 		this.tasksToHandle = new HashSet<Task>();
+		this.bidRecord = new BidRecord();
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// TODO : Make the agent handle the new task IF it won the auctions
+		this.bidRecord.recordBids(winner, bids); 
 		System.out.print("[BID] : ");
 		for (Long bid : bids) {
 			System.out.print(bid + " ");
@@ -113,6 +118,9 @@ public class Auction implements AuctionBehavior {
 		return bid;
 	}
 
+	/**
+	 * tasks are the tasks that THIS AGENT needs to handle
+	 */
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
 		System.out.println();
@@ -125,9 +133,14 @@ public class Auction implements AuctionBehavior {
 			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
 		}
 		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
-		System.out.println("TOTAL REWARD : " + tasks.rewardSum());
+		System.out.println("TOTAL REWARD : " + this.bidRecord.getTotalReward(this.agent.id()));
 		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - sls.getSolutions().getFirstSolution().totalCost));
-
+		System.out.println();
+		System.out.println("TOTAL REWARD OF THE OTHERS :");
+		Set<Integer> winners = new LinkedHashSet<Integer>(this.bidRecord.getWinners());
+		for (int winner : winners) {
+			System.out.println("   " + winner + " : " + this.bidRecord.getTotalReward(winner));
+		}
 		System.out.println();
 		return plans;
 	}
