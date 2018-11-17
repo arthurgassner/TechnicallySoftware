@@ -3,8 +3,10 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import logist.LogistSettings;
 import logist.Measures;
@@ -29,6 +31,7 @@ public class Auction implements AuctionBehavior {
 	private Topology topology;
 	private TaskDistribution distribution;
 	private Agent agent;
+	private BidRecord bidRecord;
 
 	private StateActionTables stateActionTables;
 	private long timeout_setup;
@@ -76,11 +79,20 @@ public class Auction implements AuctionBehavior {
 		this.currentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
 		this.tasksToHandle = new HashSet<Task>();
+		this.bidRecord = new BidRecord();
 	}
 
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		// TODO : Make the agent handle the new task IF it won the auctions
+		this.bidRecord.recordBids(winner, bids); 
+		System.out.print("[BID] : ");
+		for (Long bid : bids) {
+			System.out.print(bid + " ");
+		}
+		System.out.println();
+		System.out.println();
+
 		if (winner == this.agent.id()) {
 			this.tasksToHandle.add(previous);
 			this.currentSolution = this.currentSolutionProposition;
@@ -111,23 +123,35 @@ public class Auction implements AuctionBehavior {
 
 		// 3. Place a bid according to results (Simon)
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
-		System.out.println("BID : " + bid);
-		System.out.println();
 		bid = bid < 0 ? -bid : bid;
-		return bid/2;
+		System.out.println("[MY BID] : " + bid);
+		return bid;
 	}
 
+	/**
+	 * tasks are the tasks that THIS AGENT needs to handle
+	 */
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-
+		System.out.println();
+		System.out.println("START PLANNING [" + tasks.size() + "tasks ]");
 		// TODO use the results of askPrice to output the plans (Arthur)
 		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-		SLS sls = new SLS(vehicles, tasks, this.timeout_bid,
-				Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
+		SLS sls = new SLS(vehicles, tasks, this.timeout_bid, Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
 		for (Vehicle v : vehicles) {
 			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
 		}
-				return plans;
+		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
+		System.out.println("TOTAL REWARD : " + this.bidRecord.getTotalReward(this.agent.id()));
+		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - sls.getSolutions().getFirstSolution().totalCost));
+		System.out.println();
+		System.out.println("TOTAL REWARD OF THE OTHERS :");
+		Set<Integer> winners = new LinkedHashSet<Integer>(this.bidRecord.getWinners());
+		for (int winner : winners) {
+			System.out.println("   " + winner + " : " + this.bidRecord.getTotalReward(winner));
+		}
+		System.out.println();
+		return plans;
 	}
 }

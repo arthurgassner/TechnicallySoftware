@@ -23,7 +23,7 @@ public class Solution {
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
 		vehicles.addAll(simpleVehicleAgendas.keySet());
 		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteAgendas();
+		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = this.getTotalCost();
 	}
 	
@@ -40,7 +40,7 @@ public class Solution {
 		}
 		
 		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteAgendas();
+		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = 0;
 	}
 
@@ -79,25 +79,32 @@ public class Solution {
 		return totalCostOfThisSolution;
 	}
 
-	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas() {
+	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
 
-		HashMap<Vehicle, ArrayList<Action>> completeVehicleAgenda = new HashMap<Vehicle, ArrayList<Action>>();
-
+		HashMap<Vehicle, ArrayList<Action>> completeVehicleAgendas = new HashMap<Vehicle, ArrayList<Action>>();
+		
 		// Generate complete vehicle task lists from simplified version
-		for (Vehicle vehicle : this.vehicles) {
-			ArrayList<TaskWrapper> simpleTaskList = simpleVehicleAgendas.get(vehicle);
-			City origin = vehicle.getCurrentCity();
-			for (TaskWrapper task : simpleTaskList) {
-				if (completeVehicleAgenda.containsKey(vehicle)) {
-					completeVehicleAgenda.get(vehicle).addAll(this.getAgenda(origin, task));
+		for (Vehicle v : simpleVehicleAgendas.keySet()) {			
+			ArrayList<TaskWrapper> simpleVehicleAgenda = simpleVehicleAgendas.get(v);
+			City origin = v.getCurrentCity();
+			for (TaskWrapper tw : simpleVehicleAgenda) {
+				if (completeVehicleAgendas.containsKey(v)) {
+					completeVehicleAgendas.get(v).addAll(this.getAgenda(origin, tw));
 				} else {
-					completeVehicleAgenda.put(vehicle, this.getAgenda(origin, task));
+					completeVehicleAgendas.put(v, this.getAgenda(origin, tw));
 				}
-				origin = task.getEndCity();
+				origin = tw.getEndCity();
 			}
 		}
 
-		return completeVehicleAgenda;
+		// Make sure all vehicles have one
+		for (Vehicle v : simpleVehicleAgendas.keySet()) {
+			if (!completeVehicleAgendas.containsKey(v)) {
+				completeVehicleAgendas.put(v, new ArrayList<Action>());
+			}
+		}
+		
+		return completeVehicleAgendas;
 	}
 
 	/**
