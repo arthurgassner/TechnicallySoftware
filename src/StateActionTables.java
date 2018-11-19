@@ -261,11 +261,11 @@ public class StateActionTables {
 	/*
 	 * gets future value of the final task in a plan. 
 	 */
-	public double getFutureValueOfLastTask(Vehicle vehicle, City fromCity, Task finalTask) {
+	public double getFutureValueOfLastTask(Vehicle vehicle, City endCity) {
 		int valueToEncodeState = this.numCities + 1;
 
 		// find the numerical values associated with each city
-		int current_from = this.cityList.indexOf(finalTask.deliveryCity);
+		int current_from = this.cityList.indexOf(endCity);
 		int current_to = this.numCities;
 		// Compute the state
 		int state = current_from * valueToEncodeState + current_to;

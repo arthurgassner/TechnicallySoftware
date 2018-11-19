@@ -28,6 +28,7 @@ public class BidRecord {
 	public void recordBids(int winner, Long[] bids) {
 		this.winners.add(winner);
 		this.bids.add(new ArrayList<Long>(Arrays.asList(bids)));
+		//System.out.println(this.bids.toString());
 	}
 
 	/**
@@ -56,4 +57,18 @@ public class BidRecord {
 		}
 		return total_reward;
 	}
+	
+	public long getTotalAdversaryReward(int friendlyAgentID){
+		//ASSUMES ONLY TWO AGENTS - ONE FRIENDLY, ONE ADVERSARY
+		long total_reward = 0; 
+		int current_round = 0;
+		for (int id : this.winners) {
+			if (id != friendlyAgentID) {
+				total_reward += Collections.min(this.bids.get(current_round));
+			}
+			current_round++;
+		}
+		return total_reward;
+	}
+	
 }

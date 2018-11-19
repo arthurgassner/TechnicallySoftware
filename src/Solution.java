@@ -17,14 +17,17 @@ public class Solution {
 	private final HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas;
 	private final List<Vehicle> vehicles;
 	public final double totalCost;
+	public final StateActionTables stateActionTables;
 
-	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
+	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTables stateActionTables) {
 		this.simpleVehicleAgendas = simpleVehicleAgendas;
+		this.stateActionTables = stateActionTables;
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
 		vehicles.addAll(simpleVehicleAgendas.keySet());
 		this.vehicles = vehicles;
 		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
-		this.totalCost = this.getTotalCost();
+		this.totalCost = this.getTotalCost();// - 0.01*this.discountCostByFutureBenefit();
+		//System.out.println(this.totalCost);
 	}
 	
 	/**
@@ -42,6 +45,7 @@ public class Solution {
 		this.vehicles = vehicles;
 		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = 0;
+		this.stateActionTables = null;
 	}
 
 	public ArrayList<Vehicle> getVehicles() {
@@ -79,6 +83,23 @@ public class Solution {
 		return totalCostOfThisSolution;
 	}
 
+	private double discountCostByFutureBenefit(){
+		
+		double endBenefitOfThisSolution = 0;
+		for (Vehicle vehicle : this.vehicleAgendas.keySet()) {
+			City endCity;
+			if(!this.simpleVehicleAgendas.get(vehicle).isEmpty()){
+				endCity = this.simpleVehicleAgendas.get(vehicle).get(this.simpleVehicleAgendas.get(vehicle).size()-1).getEndCity();	
+			}
+			else{
+				endCity = vehicle.getCurrentCity();
+			}
+			
+			endBenefitOfThisSolution += this.stateActionTables.getFutureValueOfLastTask(vehicle, endCity);
+		}
+		return endBenefitOfThisSolution;
+	}
+	
 	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
 
 		HashMap<Vehicle, ArrayList<Action>> completeVehicleAgendas = new HashMap<Vehicle, ArrayList<Action>>();

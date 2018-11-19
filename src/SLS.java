@@ -27,11 +27,14 @@ public class SLS {
 	 * randomly selected
 	 */
 	private final int MAX_REPEAT = 10;
+	private StateActionTables stateActionTables;
+	
 
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTables stateActionTables) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
 		this.amountBestSolutions = amountBestSolutions;
+		this.stateActionTables= stateActionTables;
 		// Discount the time limit to ensure that a solution is returned
 		timeLimit -= 500; // The other way didn't work somehow - non-integer
 							// time maybe?
@@ -183,7 +186,7 @@ public class SLS {
 			newSimpleVehicleAgendas.put(v1, v1Agenda);
 
 			newSimpleVehicleAgendas.put(v2, v2Agenda);
-			solutions.add(new Solution(newSimpleVehicleAgendas));
+			solutions.add(new Solution(newSimpleVehicleAgendas,this.stateActionTables));
 		}
 
 		return solutions;
@@ -316,7 +319,7 @@ public class SLS {
 			}
 		}
 
-		return new Solution(simpleVehicleAgendas);
+		return new Solution(simpleVehicleAgendas,this.stateActionTables);
 	}
 
 	private Solution generateInitialSolutionGreedy(List<Vehicle> vehicles, TaskSet tasks) {
@@ -369,7 +372,7 @@ public class SLS {
 			simpleVehicleAgendas.put(vehicles.get(i), new ArrayList<TaskWrapper>());
 		}
 
-		return new Solution(simpleVehicleAgendas);
+		return new Solution(simpleVehicleAgendas,this.stateActionTables);
 	}
 
 	@SuppressWarnings("unchecked")
