@@ -26,7 +26,7 @@ public class Solution {
 		vehicles.addAll(simpleVehicleAgendas.keySet());
 		this.vehicles = vehicles;
 		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
-		this.totalCost = this.getTotalCost();// - 0.01*this.discountCostByFutureBenefit();
+		this.totalCost = this.getTotalCost() - 0.01*this.discountCostByFutureBenefit();
 		//System.out.println(this.totalCost);
 	}
 	

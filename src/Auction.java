@@ -54,7 +54,7 @@ public class Auction implements AuctionBehavior {
 	 * likely to succeed percentage (i.e. closer to 0) but focus on 
 	 * earning a larger profit margin in earlier rounds... no idea if it'd pay off
 	*/
-	private final double bidDifferencePercentage = 0.9; 
+	private final double bidDifferencePercentage = 0.75; 
 
 	private Solution currentSolutionProposition; // The solution we're proposing
 	private Solution currentSolution; // The solution we're actually going with
@@ -105,7 +105,7 @@ public class Auction implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		this.bidRecord.recordBids(winner, bids); 
-		System.out.print("[BID] : ");
+		System.out.print("[BIDS SUBMITTED] : ");
 		for (Long bid : bids) {
 			System.out.print(bid + " ");
 		}
@@ -181,13 +181,14 @@ public class Auction implements AuctionBehavior {
 		
 		//Predict value of task to adversary
 		long adversaryCost = this.predictedAdversaryCost - this.amountWonByAdversary - this.adversaryBidDiscrepancy/2; 
-		System.out.print("Adversary Cost = ");
+		System.out.print("Adversary Break Even Bid = ");
 		System.out.print(this.predictedAdversaryCost);
 		System.out.print("-");
 		System.out.print(this.amountWonByAdversary);
 		System.out.print("-");
 		System.out.print(this.adversaryBidDiscrepancy/2);
-		System.out.println(" ");
+		System.out.print("=");
+		System.out.print(adversaryCost);
 		System.out.println(" ");
 		
 		if(adversaryCost < 0){
@@ -198,11 +199,12 @@ public class Auction implements AuctionBehavior {
 		
 		//Find our minimum bid to break even
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.amountWonByFriendly); //this.currentSolution.totalCost);
-		System.out.print("Friendly Cost = ");
+		System.out.print("Friendly Break Even Bid = ");
 		System.out.print(this.currentSolutionProposition.totalCost);
 		System.out.print("-");
 		System.out.print(this.amountWonByFriendly);
-		System.out.println(" ");
+		System.out.print("=");
+		System.out.print(bid);
 		System.out.println(" ");
 		
 		if(bid<0){
