@@ -10,6 +10,7 @@ import logist.plan.Action.Pickup;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
+import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
 public class Solution {
@@ -23,14 +24,14 @@ public class Solution {
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
 		vehicles.addAll(simpleVehicleAgendas.keySet());
 		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
+		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = this.getTotalCost();
 	}
-	
+
 	/**
-	 * Construct a solution where all the vehicles do NOTHING.
-	 * No tasks is handled here.
-	 * The cost is 0 since NOTHING is done.
+	 * Construct a solution where all the vehicles do NOTHING. No tasks is handled
+	 * here. The cost is 0 since NOTHING is done.
+	 * 
 	 * @param vehicles
 	 */
 	public Solution(List<Vehicle> vehicles) {
@@ -38,9 +39,9 @@ public class Solution {
 		for (Vehicle v : vehicles) {
 			this.simpleVehicleAgendas.put(v, new ArrayList<TaskWrapper>());
 		}
-		
+
 		this.vehicles = vehicles;
-		this.vehicleAgendas = generateCompleteAgendas(simpleVehicleAgendas);
+		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = 0;
 	}
 
@@ -79,12 +80,13 @@ public class Solution {
 		return totalCostOfThisSolution;
 	}
 
-	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
+	private HashMap<Vehicle, ArrayList<Action>> generateCompleteAgendas(
+			HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
 
 		HashMap<Vehicle, ArrayList<Action>> completeVehicleAgendas = new HashMap<Vehicle, ArrayList<Action>>();
-		
+
 		// Generate complete vehicle task lists from simplified version
-		for (Vehicle v : simpleVehicleAgendas.keySet()) {			
+		for (Vehicle v : simpleVehicleAgendas.keySet()) {
 			ArrayList<TaskWrapper> simpleVehicleAgenda = simpleVehicleAgendas.get(v);
 			City origin = v.getCurrentCity();
 			for (TaskWrapper tw : simpleVehicleAgenda) {
@@ -103,7 +105,7 @@ public class Solution {
 				completeVehicleAgendas.put(v, new ArrayList<Action>());
 			}
 		}
-		
+
 		return completeVehicleAgendas;
 	}
 
@@ -157,12 +159,12 @@ public class Solution {
 			if (!s.simpleVehicleAgendas.keySet().contains(v)) {
 				return false;
 			}
-			
+
 			if (this.simpleVehicleAgendas.get(v).size() != s.simpleVehicleAgendas.get(v).size()) {
 				return false;
 			}
-			
-			for (int i = 0;i < this.simpleVehicleAgendas.get(v).size(); i++) {
+
+			for (int i = 0; i < this.simpleVehicleAgendas.get(v).size(); i++) {
 				TaskWrapper tw1 = this.simpleVehicleAgendas.get(v).get(i);
 				TaskWrapper tw2 = s.simpleVehicleAgendas.get(v).get(i);
 				if (!tw1.equals(tw2)) {
@@ -171,5 +173,37 @@ public class Solution {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Each solution uses certain tasks
+	 * 
+	 * Each of those tasks are now replaced by *tasks*
+	 * 
+	 * It is assumed that those tasks are essentially the same
+	 * 
+	 * @param tasks tasks to be used instead
+	 */
+	public void replaceTasks(TaskSet tasks) {
+		
+		// All the TaskWrapper replacement (the ones we're using INSTEAD)
+		ArrayList<TaskWrapper> twReplacements = new ArrayList<TaskWrapper>();
+		for (Task t : tasks) {
+			TaskWrapper pickupReplacement = new TaskWrapper(t, true);
+			TaskWrapper deliveryReplacement = new TaskWrapper(t, false);
+			twReplacements.add(pickupReplacement);
+			twReplacements.add(deliveryReplacement);
+		}
+		
+		/*
+		 * Go through each vehicle's simpleVehicleAgenda, and replace the taskwrapper one by one
+		 */
+		for (Vehicle v : this.simpleVehicleAgendas.keySet()) {
+			for (int i = 0; i < this.simpleVehicleAgendas.get(v).size(); i++) {
+				TaskWrapper twToBeReplaced = this.simpleVehicleAgendas.get(v).get(i);
+				TaskWrapper twReplacement = twReplacements.get(twReplacements.indexOf(twToBeReplaced));
+				this.simpleVehicleAgendas.get(v).set(i, twReplacement);
+			}
+		}
 	}
 }

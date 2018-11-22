@@ -38,6 +38,21 @@ public class BidRecord {
 	public ArrayList<Integer> getWinners() {
 		return this.winners;
 	}
+	
+	/**
+	 * 
+	 * @param agendID
+	 * @return an arraylist with the bids that the agentID bid. 
+	 * And first element is the first bid, and so on.
+	 */
+	public ArrayList<Long> getBids(int agendID) {
+		ArrayList<Long> bids = new ArrayList<Long>();
+		for (int round = 0; round < this.bids.size(); round++) {
+			long agentBid = this.bids.get(round).get(agendID);
+			bids.add(agentBid);
+		}
+		return bids;
+	}
 
 	/**
 	 * 

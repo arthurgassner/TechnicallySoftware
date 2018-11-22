@@ -113,7 +113,7 @@ public class Auction implements AuctionBehavior {
 
 		// 3. Place a bid according to results (Simon)
 		long bid = (long) (this.currentSolutionProposition.totalCost - this.currentSolution.totalCost);
-		bid = bid < 0 ? -bid : bid;
+		bid = bid <= 0 ? -bid : bid;
 		System.out.println("[MY BID] : " + bid);
 		return bid;
 	}
@@ -128,13 +128,13 @@ public class Auction implements AuctionBehavior {
 		// TODO use the results of askPrice to output the plans (Arthur)
 		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-		SLS sls = new SLS(vehicles, tasks, this.timeout_bid, Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS);
+		this.currentSolution.replaceTasks(tasks);
 		for (Vehicle v : vehicles) {
-			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
+			plans.add(new Plan(v.getCurrentCity(), this.currentSolution.getVehicleAgendas().get(v)));
 		}
-		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
+		System.out.println("TOTAL COST : " + this.currentSolution.totalCost);
 		System.out.println("TOTAL REWARD : " + this.bidRecord.getTotalReward(this.agent.id()));
-		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - sls.getSolutions().getFirstSolution().totalCost));
+		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - this.currentSolution.totalCost));
 		System.out.println();
 		System.out.println("TOTAL REWARD OF THE OTHERS :");
 		Set<Integer> winners = new LinkedHashSet<Integer>(this.bidRecord.getWinners());
