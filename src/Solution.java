@@ -14,8 +14,8 @@ import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
 public class Solution {
-	private final HashMap<Vehicle, ArrayList<Action>> vehicleAgendas;
-	private final HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas;
+	private HashMap<Vehicle, ArrayList<Action>> vehicleAgendas;
+	private HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas;
 	private final List<Vehicle> vehicles;
 	public final double totalCost;
 	public final StateActionTable stateActionTables;
@@ -223,5 +223,6 @@ public class Solution {
 				this.simpleVehicleAgendas.get(v).set(i, twReplacement);
 			}
 		}
+		this.vehicleAgendas = this.generateCompleteAgendas(this.simpleVehicleAgendas);
 	}
 }
