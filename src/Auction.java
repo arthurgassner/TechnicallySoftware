@@ -35,7 +35,7 @@ public class Auction implements AuctionBehavior {
 	
 	private BidRecord bidRecord;
 
-	private StateActionTables stateActionTables;
+	private StateActionTable stateActionTable;
 	private long timeout_setup;
 	private long timeout_plan;
 	private long timeout_bid;
@@ -94,7 +94,7 @@ public class Auction implements AuctionBehavior {
 		this.distribution = distribution;
 		this.agent = agent;
 		this.adversary = agent; //create a copy of the agent to be used for estimating adversary bidding
-		this.stateActionTables = new StateActionTables(topology, distribution, gamma,maxNumTasks,threshold,this.agent.vehicles(),2);
+		this.stateActionTable = new StateActionTable(topology, distribution, gamma,maxNumTasks,threshold,this.agent.vehicles(),2);
 		this.currentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
 		this.tasksToHandle = new HashSet<Task>();
@@ -153,14 +153,14 @@ public class Auction implements AuctionBehavior {
 			TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			tasksWithAuctionedTask.add(task);
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid/2,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTables);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
 			solutions = sls.getSolutions();
 
 			//TODO: See if timeout needs to be halved to handle both calcs
 			TaskSet adversaryTasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			adversaryTasksWithAuctionedTask.add(task);
 			SLS slsAdversary = new SLS(adversary.vehicles(), adversaryTasksWithAuctionedTask, this.timeout_bid/2,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTables);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
 			adversarySolutions = slsAdversary.getSolutions();
 			this.predictedAdversaryCost = (long) adversarySolutions.getFirstSolution().totalCost;
 		}
@@ -169,7 +169,7 @@ public class Auction implements AuctionBehavior {
 			TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			tasksWithAuctionedTask.add(task);
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTables);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
 			solutions = sls.getSolutions();
 			this.predictedAdversaryCost = (long) solutions.getFirstSolution().totalCost;
 		}
@@ -239,13 +239,13 @@ public class Auction implements AuctionBehavior {
 		// TODO use the results of askPrice to output the plans (Arthur)
 		// TODO MAKE THIS BETTER. YOU ALREADY COMPUTED THE SOLUTION
 		ArrayList<Plan> plans = new ArrayList<Plan>();
-		SLS sls = new SLS(vehicles, tasks, this.timeout_bid, Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTables);
+		this.currentSolution.replaceTasks(tasks);
 		for (Vehicle v : vehicles) {
-			plans.add(new Plan(v.getCurrentCity(), sls.getSolutions().getFirstSolution().getVehicleAgendas().get(v)));
+			plans.add(new Plan(v.getCurrentCity(), this.currentSolution.getVehicleAgendas().get(v)));
 		}
-		System.out.println("TOTAL COST : " + sls.getSolutions().getFirstSolution().totalCost);
+		System.out.println("TOTAL COST : " + this.currentSolution.totalCost);
 		System.out.println("TOTAL REWARD : " + this.bidRecord.getTotalReward(this.agent.id()));
-		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - sls.getSolutions().getFirstSolution().totalCost));
+		System.out.println("TOTAL PROFIT : " + (tasks.rewardSum() - this.currentSolution.totalCost));
 		System.out.println();
 		System.out.println("TOTAL REWARD OF THE OTHERS :");
 		Set<Integer> winners = new LinkedHashSet<Integer>(this.bidRecord.getWinners());

@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Collection;
 
+import logist.task.TaskSet;
+
 /**
  * An ordered list of solutions.
  * 
@@ -107,5 +109,4 @@ public class SolutionList {
 			this.add(s);
 		}
 	}
-
 }

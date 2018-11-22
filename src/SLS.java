@@ -27,10 +27,10 @@ public class SLS {
 	 * randomly selected
 	 */
 	private final int MAX_REPEAT = 10;
-	private StateActionTables stateActionTables;
+	private StateActionTable stateActionTables;
 	
 
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTables stateActionTables) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
 		this.amountBestSolutions = amountBestSolutions;
@@ -94,20 +94,6 @@ public class SLS {
 			System.out.print(" - ");
 		}
 		System.out.println();
-		
-//		System.out.println("AGENDAS : ");
-//		for (Solution s : this.solutions.getAll()) {
-//			for (Vehicle v : s.getSimpleVehicleAgendas().keySet()) {
-//				System.out.print(v + " : ");
-//				for (TaskWrapper tw : s.getSimpleVehicleAgendas().get(v)) {
-//					System.out.print(tw);
-//					System.out.print(" => ");
-//				}
-//				System.out.println();
-//			}
-//			System.out.println();
-//		}
-//		System.out.println();
 	}
 
 	public SolutionList getSolutions() {

@@ -39,6 +39,37 @@ public class BidRecord {
 	public ArrayList<Integer> getWinners() {
 		return this.winners;
 	}
+	
+	/**
+	 * 
+	 * @param agendID
+	 * @return an arraylist with the bids that the agentID bid. 
+	 * And first element is the first bid, and so on.
+	 */
+	public ArrayList<Long> getBids(int agentID) {
+		ArrayList<Long> bids = new ArrayList<Long>();
+		for (int round = 0; round < this.bids.size(); round++) {
+			long agentBid = this.bids.get(round).get(agentID);
+			bids.add(agentBid);
+		}
+		return bids;
+	}
+	
+	/**
+	 * 
+	 * @param agentID
+	 * @return the average bid that has been bid by agentID
+	 */
+	public long getAverageBid(int agentID) {
+		long average = 0;
+		for (int round = 0; round < this.bids.size(); round++) {
+			if (this.getBids(agentID).get(round) != null) {
+				average += this.getBids(agentID).get(round);
+			}
+		}
+		average /= this.bids.size();
+		return average;
+	}
 
 	/**
 	 * 
@@ -51,7 +82,7 @@ public class BidRecord {
 		int current_round = 0;
 		for (int id : this.winners) {
 			if (id == agentID) {
-				total_reward += Collections.min(this.bids.get(current_round));
+				total_reward += this.bids.get(current_round).get(agentID);
 			}
 			current_round++;
 		}

@@ -15,7 +15,7 @@ import logist.plan.Action.Delivery;
 /**
  * This class provides you with the best action to do given a certain state
  */
-public class StateActionTables {
+public class StateActionTable {
 
 	private List<City> cityList;
 	private int numCities;
@@ -34,7 +34,7 @@ public class StateActionTables {
 	
 	//TODO: set threshold in XML such that fast convergence is priority. Doesn't need to be super optimal (maybe 1% of the expected value?)
 	private double threshold; 
-	public StateActionTables(Topology topology, TaskDistribution td, Double gamma, int maxNumTasks, double threshold, List<Vehicle> vehicleList, double rewardPerDistanceEstimate) {
+	public StateActionTable(Topology topology, TaskDistribution td, Double gamma, int maxNumTasks, double threshold, List<Vehicle> vehicleList, double rewardPerDistanceEstimate) {
 		this.cityList = topology.cities();
 		this.numCities = this.cityList.size();
 		this.numActions = this.numCities + 1;
