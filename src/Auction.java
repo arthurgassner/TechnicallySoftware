@@ -2,6 +2,7 @@
 //the list of imports
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -123,7 +124,7 @@ public class Auction implements AuctionBehavior {
 		}
 		
 		//keep a running average of the discrepancy and use it to modify our bidding strategy
-		long numTasksAuctioned = this.agent.getTotalTasks() + this.adversary.getTotalTasks(); 
+		long numTasksAuctioned = previous.id + 1; 
 		//i dont think there is ever a case where this is run 
 		//and numTasksAuctioned = 0... if that could ever be a case, check for divide by zero
 		this.adversaryBidDiscrepancy = (this.predictedAdversaryCost - adversaryBid + (numTasksAuctioned-1)*this.adversaryBidDiscrepancy)/numTasksAuctioned; 
@@ -152,15 +153,26 @@ public class Auction implements AuctionBehavior {
 			// 1. For EACH AGENT, find the best solutions according to centralized (Arthur)
 			TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			tasksWithAuctionedTask.add(task);
+			
+			//Create the initial solution
+			HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas = (HashMap<Vehicle, ArrayList<TaskWrapper>>) this.currentSolution.getSimpleVehicleAgendas().clone();
+			for (Vehicle v : simpleVehicleAgendas.keySet()) {
+				if (v.capacity() >= task.weight) {
+					simpleVehicleAgendas.get(v).add(new TaskWrapper(task, true));
+					simpleVehicleAgendas.get(v).add(new TaskWrapper(task, false));
+				}
+			}
+			Solution initialSolution = new Solution(simpleVehicleAgendas, this.currentSolution.stateActionTables);
+			
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid/2,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable, initialSolution);
 			solutions = sls.getSolutions();
 
 			//TODO: See if timeout needs to be halved to handle both calcs
 			TaskSet adversaryTasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			adversaryTasksWithAuctionedTask.add(task);
 			SLS slsAdversary = new SLS(adversary.vehicles(), adversaryTasksWithAuctionedTask, this.timeout_bid/2,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable, null);
 			adversarySolutions = slsAdversary.getSolutions();
 			this.predictedAdversaryCost = (long) adversarySolutions.getFirstSolution().totalCost;
 		}
@@ -169,7 +181,7 @@ public class Auction implements AuctionBehavior {
 			TaskSet tasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			tasksWithAuctionedTask.add(task);
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid,
-					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable);
+					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable, null);
 			solutions = sls.getSolutions();
 			this.predictedAdversaryCost = (long) solutions.getFirstSolution().totalCost;
 		}

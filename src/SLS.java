@@ -29,8 +29,7 @@ public class SLS {
 	private final int MAX_REPEAT = 10;
 	private StateActionTable stateActionTables;
 	
-
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables, Solution initialSolution) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
 		this.amountBestSolutions = amountBestSolutions;
@@ -42,16 +41,21 @@ public class SLS {
 		// Initialize the solutions
 		this.solutions = new SolutionList(amountBestSolutions);
 
-		// Generate the first solution
-		int generateInitial = 1;
-		switch (generateInitial) {
-		case 1:
-			this.solutions.add(generateInitialSolutionNaive(vehicles, tasks));
-			break;
-		case 2:
-			this.solutions.add(generateInitialSolutionGreedy(vehicles, tasks));
-			break;
+		// Generate an initial solution of none has been provided
+		if (initialSolution == null) {
+			// Generate the first solution
+			int generateInitial = 1;
+			switch (generateInitial) {
+			case 1:
+				initialSolution = generateInitialSolutionNaive(vehicles, tasks);
+				break;
+			case 2:
+				initialSolution = generateInitialSolutionGreedy(vehicles, tasks);
+				break;
+			}
 		}
+		
+		this.solutions.add(initialSolution);
 
 		SolutionList localMins = this.solutions; // stores the solutions with the lowest cost we've encountered
 
