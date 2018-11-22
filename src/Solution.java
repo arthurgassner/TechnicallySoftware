@@ -23,9 +23,7 @@ public class Solution {
 	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTables) {
 		this.simpleVehicleAgendas = simpleVehicleAgendas;
 		this.stateActionTables = stateActionTables;
-		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
-		vehicles.addAll(simpleVehicleAgendas.keySet());
-		this.vehicles = vehicles;
+		this.vehicles = new ArrayList<Vehicle>(simpleVehicleAgendas.keySet());
 		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = this.getTotalCost() - 0.01*this.discountCostByFutureBenefit();
 	}
