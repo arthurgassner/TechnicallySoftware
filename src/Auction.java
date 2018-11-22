@@ -123,7 +123,7 @@ public class Auction implements AuctionBehavior {
 		}
 		
 		//keep a running average of the discrepancy and use it to modify our bidding strategy
-		long numTasksAuctioned = this.agent.getTotalTasks() + this.adversary.getTotalTasks(); 
+		long numTasksAuctioned = previous.id + 1; 
 		//i dont think there is ever a case where this is run 
 		//and numTasksAuctioned = 0... if that could ever be a case, check for divide by zero
 		this.adversaryBidDiscrepancy = (this.predictedAdversaryCost - adversaryBid + (numTasksAuctioned-1)*this.adversaryBidDiscrepancy)/numTasksAuctioned; 
@@ -180,13 +180,13 @@ public class Auction implements AuctionBehavior {
 		this.currentSolutionProposition = solutions.getFirstSolution();
 		
 		//Predict value of task to adversary
-		long adversaryCost = this.predictedAdversaryCost - this.amountWonByAdversary - this.adversaryBidDiscrepancy/2; 
+		long adversaryCost = this.predictedAdversaryCost - this.amountWonByAdversary - this.adversaryBidDiscrepancy; 
 		System.out.print("Adversary Break Even Bid = ");
 		System.out.print(this.predictedAdversaryCost);
 		System.out.print("-");
 		System.out.print(this.amountWonByAdversary);
 		System.out.print("-");
-		System.out.print(this.adversaryBidDiscrepancy/2);
+		System.out.print(this.adversaryBidDiscrepancy);
 		System.out.print("=");
 		System.out.print(adversaryCost);
 		System.out.println(" ");
