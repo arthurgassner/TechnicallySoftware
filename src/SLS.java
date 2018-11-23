@@ -21,7 +21,7 @@ public class SLS {
 	private final int amountBestSolutions; // How many "best solutions" we're keeping, i.e. the size of solutions
 	private final double P_LOWER = .95;
 	private final double P_UPPER = 1;
-	private final long TIME_LIMIT_DECREMENT = 50;
+	private final long TIME_LIMIT_DECREMENT = 100;
 
 	private int repeatCount = 0;
 	/*
