@@ -17,15 +17,24 @@ public class Solution {
 	private HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas;
 	private final List<Vehicle> vehicles;
 	public final double totalCost;
-	public final StateActionTable stateActionTables;
+	public final double goodness;
+	public final StateActionTable stateActionTable;
 
-	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTables, int auctionNumber) {
+	/**
+	 * 
+	 * @param simpleVehicleAgendas
+	 * @param stateActionTable
+	 * @param futureBenefitFactor factor between 0 and 1 regulating how much the discount
+	 * of future benefit influences this solution's goodness.
+	 * 0 means that the future benefit has no influence, and that the goodness == totalCost
+	 */
+	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTable, double futureBenefitFactor) {
 		this.simpleVehicleAgendas = simpleVehicleAgendas;
-		this.stateActionTables = stateActionTables;
+		this.stateActionTable = stateActionTable;
 		this.vehicles = new ArrayList<Vehicle>(simpleVehicleAgendas.keySet());
 		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
-		double future_benefit_factor = 0.1*(1-((double) auctionNumber)/50.0);
-		this.totalCost = this.getTotalCost() - future_benefit_factor*this.discountCostByFutureBenefit();
+		this.totalCost = this.computeTotalCost(this.simpleVehicleAgendas);
+		this.goodness = this.totalCost - futureBenefitFactor*this.discountCostByFutureBenefit(simpleVehicleAgendas, stateActionTable);
 	}
 
 	/**
@@ -43,7 +52,8 @@ public class Solution {
 		this.vehicles = vehicles;
 		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
 		this.totalCost = 0;
-		this.stateActionTables = null;
+		this.goodness = 0;
+		this.stateActionTable = null;
 	}
 
 	public ArrayList<Vehicle> getVehicles() {
@@ -62,15 +72,15 @@ public class Solution {
 	 * 
 	 * @return the total cost of this solution
 	 */
-	private double getTotalCost() {
+	private double computeTotalCost(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas) {
 		double totalCostOfThisSolution = 0;
-		for (Vehicle vehicle : this.vehicleAgendas.keySet()) {
+		for (Vehicle vehicle : simpleVehicleAgendas.keySet()) {
 			double totalDistanceOfThisVehicle = 0;
 
 			City fromCity = vehicle.getCurrentCity();
 
-			for (int i = 0; i < this.simpleVehicleAgendas.get(vehicle).size(); i++) {
-				City toCity = this.simpleVehicleAgendas.get(vehicle).get(i).getEndCity();
+			for (int i = 0; i < simpleVehicleAgendas.get(vehicle).size(); i++) {
+				City toCity = simpleVehicleAgendas.get(vehicle).get(i).getEndCity();
 				totalDistanceOfThisVehicle += fromCity.distanceTo(toCity);
 				fromCity = toCity;
 			}
@@ -81,10 +91,9 @@ public class Solution {
 		return totalCostOfThisSolution;
 	}
 
-	private double discountCostByFutureBenefit(){
-		
+	private double discountCostByFutureBenefit(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTable){
 		double endBenefitOfThisSolution = 0;
-		for (Vehicle vehicle : this.vehicleAgendas.keySet()) {
+		for (Vehicle vehicle : this.simpleVehicleAgendas.keySet()) {
 			City endCity;
 			if(!this.simpleVehicleAgendas.get(vehicle).isEmpty()){
 				endCity = this.simpleVehicleAgendas.get(vehicle).get(this.simpleVehicleAgendas.get(vehicle).size()-1).getEndCity();	
@@ -93,7 +102,7 @@ public class Solution {
 				endCity = vehicle.getCurrentCity();
 			}
 			
-			endBenefitOfThisSolution += this.stateActionTables.getFutureValueOfLastTask(vehicle, endCity);
+			endBenefitOfThisSolution += this.stateActionTable.getFutureValueOfLastTask(vehicle, endCity);
 		}
 		return endBenefitOfThisSolution;
 	}

@@ -12,7 +12,7 @@ import logist.task.TaskSet;
  * Each element of the list is unique.
  * 
  * The list is ordered so
- * that the solution with the lowest total cost is the first element, and so on.
+ * that the solution with the lowest goodness is the first element, and so on.
  * 
  * @author heimdall
  *
@@ -84,7 +84,7 @@ public class SolutionList {
 					solutionAdded = true;
 					break;
 				}
-				else if (this.solutions.get(i).totalCost <= s.totalCost) {
+				else if (this.solutions.get(i).goodness <= s.goodness) {
 					this.solutions.add(i + 1, s);
 					solutionAdded = true;
 					break;

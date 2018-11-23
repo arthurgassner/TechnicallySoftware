@@ -28,6 +28,12 @@ public class Auction implements AuctionBehavior {
 	private Agent agent;
 	private Agent adversary;
 	
+	private double adversaryRatio = 1.0;
+	private double ratio = 1.0;
+	
+	private long marginalCost;
+	private long adversaryMarginalCost;
+	
 	private BidRecord bidRecord;
 
 	private StateActionTable stateActionTable;
@@ -35,14 +41,24 @@ public class Auction implements AuctionBehavior {
 	private long timeout_plan;
 	private long timeout_bid;
 
-	private long predictedAdversaryCostRaw;
+	/*
+	 * This is the cost of the plan we computed for the adversary
+	 * assuming he takes the auctioned task 
+	 */
+	private long adversaryTotalCost;
+	private long totalCost;
+	private Solution adversaryCurrentSolution;
+	private Solution adversaryCurrentSolutionProposition;
+
 	private long predictedAdversaryCostModified;
-	private long amountWonByAdversary = 0;
+	/*
+	 * This is the total reward of the tasks currently handled by the adversary
+	 * (This does not include the currently auctioned task, 
+	 * i.e. the adversary must have WON for a task to be taken into account
+	 */
+	private long totalAdversaryReward = 0;
 	private long adversaryBidDiscrepancy; 
-	//private long numberOfAdversaryTasks = 0;
-	
 	private long amountWonByFriendly = 0;
-	//private long numberOfFriendlyTasks = 0;
 	
 	/*
 	 * TODO: tweak this value. It may also be worth making it dynamic 
@@ -98,7 +114,9 @@ public class Auction implements AuctionBehavior {
 		this.adversary = agent; //create a copy of the agent to be used for estimating adversary bidding
 		this.stateActionTable = new StateActionTable(topology, distribution, gamma,maxNumTasks,threshold,this.agent.vehicles(),2);
 		this.currentSolution = new Solution(this.agent.vehicles());
+		this.adversaryCurrentSolution = new Solution(this.agent.vehicles());
 		this.currentSolutionProposition = null;
+		this.adversaryCurrentSolutionProposition = null;
 		this.tasksToHandle = new HashSet<Task>();
 		this.adversaryTasks = new HashSet<Task>();
 		this.bidRecord = new BidRecord();
@@ -135,10 +153,19 @@ public class Auction implements AuctionBehavior {
 			this.tasksToHandle.add(previous);
 			this.currentSolution = this.currentSolutionProposition;
 			this.amountWonByFriendly = this.bidRecord.getTotalReward(this.agent.id());
+			this.ratio *= 0.1;
 		}
 		else{
 			this.adversaryTasks.add(previous);
-			this.amountWonByAdversary = this.bidRecord.getTotalAdversaryReward(this.agent.id());
+			this.adversaryCurrentSolution = this.adversaryCurrentSolutionProposition;
+			this.totalAdversaryReward = this.bidRecord.getTotalAdversaryReward(this.agent.id());
+			
+			if (bids[winner] > this.adversaryMarginalCost) {
+				this.adversaryRatio *= 0.1;
+			} else {
+				this.adversaryRatio /= 0.1;
+			}
+			this.ratio /= 0.1;
 		}
 		
 		//update timeout values for next auction. currently uses a linear distribution of plan time to # of tasks
@@ -164,6 +191,10 @@ public class Auction implements AuctionBehavior {
 
 		System.out.println("[START] : Bid for :  " + task);
 
+		/*
+		 * Find how much it would cost us to handle this task
+		 * Predict how much it would cost the adversary
+		 */
 		SolutionList solutions = null;
 		SolutionList adversarySolutions = null;
 		if(task.id != 0){
@@ -174,14 +205,15 @@ public class Auction implements AuctionBehavior {
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.friendlyTimeout,
 					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable,task.id);
 			solutions = sls.getSolutions();
-
+			
 			//TODO: See if timeout needs to be halved to handle both calcs
 			TaskSet adversaryTasksWithAuctionedTask = TaskSet.copyOf(agent.getTasks());
 			adversaryTasksWithAuctionedTask.add(task);
 			SLS slsAdversary = new SLS(adversary.vehicles(), adversaryTasksWithAuctionedTask, this.adversaryTimeout,
 					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable,task.id);
 			adversarySolutions = slsAdversary.getSolutions();
-			this.predictedAdversaryCostRaw = (long) adversarySolutions.getFirstSolution().totalCost;
+			this.adversaryCurrentSolutionProposition = adversarySolutions.getFirstSolution();
+			this.adversaryTotalCost = (long) this.adversaryCurrentSolutionProposition.totalCost;
 		}
 		else{
 			//for the first task, use full time just on one agent, and bid based only on that value. 
@@ -190,80 +222,24 @@ public class Auction implements AuctionBehavior {
 			SLS sls = new SLS(agent.vehicles(), tasksWithAuctionedTask, this.timeout_bid,
 					Auction.AMOUNT_SOLUTIONS_KEPT_BY_SLS,this.stateActionTable,task.id);
 			solutions = sls.getSolutions();
-			this.predictedAdversaryCostRaw = (long) solutions.getFirstSolution().totalCost;
+			this.adversaryTotalCost = (long) solutions.getFirstSolution().totalCost;
 		}
-
-		
-		// 2. Use this.stateActionTable to discriminate the solutions of each agent,
-		// selecting the best one (Simon)
 		this.currentSolutionProposition = solutions.getFirstSolution();
+		this.totalCost = (long) this.currentSolutionProposition.totalCost;
 		
-		//Predict value of task to adversary
-		long adversaryCost = this.predictedAdversaryCostRaw - this.amountWonByAdversary - this.adversaryBidDiscrepancy; 
-		System.out.print("Adversary Break Even Bid = ");
-		System.out.print(this.predictedAdversaryCostRaw);
-		System.out.print("-");
-		System.out.print(this.amountWonByAdversary);
-		System.out.print("-");
-		System.out.print(this.adversaryBidDiscrepancy);
-		System.out.print("=");
-		System.out.print(adversaryCost);
-		System.out.println(" ");
-		
-		if(adversaryCost < 0){
-			adversaryCost = 0;
-		}
-		//not sure if it is wise to directly subtract here... adding factor of 1/2 so this acts kindve like a cheaky PI controller
-		this.predictedAdversaryCostModified = adversaryCost+1;
-		
-		
-		//Randomly either bid based on minimum bid to break even OVERALL OR minimum bid to turn a profit over previous solution
-		double randomDecider = Math.random();
+		/*
+		 * Bid
+		 */
 		long bid = 0;
-		double previousCost = this.currentSolution.totalCost;
-		if(randomDecider<this.PROBABILITY_TO_USE_TOTAL_MARGINAL_COST){
-			//Find our minimum bid to break even
-			bid = (long) (this.currentSolutionProposition.totalCost - this.amountWonByFriendly) + (long)((Math.random()-.5)*this.RANDOM_MAG); 		
-			System.out.print("Friendly Break Even Bid = ");
-			System.out.print(this.currentSolutionProposition.totalCost);
-			System.out.print("-");
-			System.out.print(this.amountWonByFriendly);
-			System.out.print("=");
-			System.out.print(bid);
-			System.out.println(" ");
-			
-		}
-		else{
-			//Find our minimum bid to turn a profit compared to the previous plan
-			bid = (long) (this.currentSolutionProposition.totalCost - previousCost) + (long)((Math.random()-.5)*this.RANDOM_MAG); 		
-			System.out.print("Friendly Profit Over Previous Bid = ");
-			System.out.print(this.currentSolutionProposition.totalCost);
-			System.out.print("-");
-			System.out.print(previousCost);
-			System.out.print("=");
-			System.out.print(bid);
-			System.out.println(" ");
-			
-		}
-
-		if(bid<0){
-			bid = 0;
+		this.marginalCost = (long) (this.totalCost - this.currentSolution.totalCost);
+		this.adversaryMarginalCost = (long) (this.adversaryTotalCost - this.adversaryCurrentSolution.totalCost);
+		
+		if (marginalCost <= 0) {
+			bid = 400;
+		} else {
+			bid = (long) Math.max(this.ratio*marginalCost, this.adversaryRatio*adversaryMarginalCost);
 		}
 		
-		if(bid<this.predictedAdversaryCostModified){
-			//if our minimum bid is less than the adversary's min bid, then bid based on adversary's min bid
-			bid += (long)((double)(this.predictedAdversaryCostModified-bid)*this.BID_DIFF_PERCENTAGE); 		
-		}
-		else{
-			//bid nominal cost if adversary has a better possible bid, just in case they overbid accidentally
-			//e.g. do nothing
-			bid += this.MARGINAL_COST_OFFSET; //assume if the adversary has a better bid prediction, they won't be immediately below. Therefore little is risked by adding to our bid.
-		}
-
-		//TODO: do we have more time once the bids have been allocated to try and find a better solution? 
-		//		If so, potentially we could use that to our advantage and accept a small loss with the thought that we'll further optimize our profit later
-		// 3. Place a bid according to results 
-		//bid = bid < 0 ? -bid : bid;
 		System.out.println("[MY BID] : " + bid);
 		return bid;
 	}

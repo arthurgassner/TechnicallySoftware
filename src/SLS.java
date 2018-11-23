@@ -12,16 +12,17 @@ import logist.topology.Topology.City;
 public class SLS {
 	private final long startTime;
 	private long currentTime;
-	private int auctionNumber;
+	private int auctionNumber; // How many tasks have been auctioned so far ?
 	/*
 	 * List of the best solutions we've seen. The first element is the one with the
 	 * lowest cost
 	 */
 	private SolutionList solutions;
 	private final int amountBestSolutions; // How many "best solutions" we're keeping, i.e. the size of solutions
-	private final double P_LOWER = .95;
+	private final double P_LOWER = .8;
 	private final double P_UPPER = 1;
 	private final long TIME_LIMIT_DECREMENT = 50;
+	private final int AMOUNT_AUCTIONED_TASK_AT_THE_END = 100;
 
 	private int repeatCount = 0;
 	/*
@@ -29,36 +30,37 @@ public class SLS {
 	 * randomly selected
 	 */
 	private final int MAX_REPEAT = 10;
-	private StateActionTable stateActionTables;
+	private StateActionTable stateActionTable;
 	
 
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables, int auctionNumber) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTable, int auctionNumber) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
 		this.auctionNumber = auctionNumber;
 		this.amountBestSolutions = amountBestSolutions;
-		this.stateActionTables= stateActionTables;
+		this.stateActionTable= stateActionTable;
+		
 		int numTasks = tasks.size();
 		if (numTasks<15){
 			// Discount the time limit to ensure that a solution is returned
-			timeLimit -= TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= this.TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 								// time maybe?
 			System.out.println("Bingo!");
 		}
 		else if(numTasks<20){
 			// Discount the time limit to ensure that a solution is returned
-			timeLimit -= 2*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= 2*this.TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 								// time maybe?
 			System.out.println("Bango!");
 		}
 		else if(numTasks<28){
-			timeLimit -= 3*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= 3*this.TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 			// time maybe?
 			System.out.println("Bongo!");
 		}
 		else{
 			// Discount the time limit to ensure that a solution is returned
-			timeLimit -= 4*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= 4*this.TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 								// time maybe?
 			System.out.println("Banjo!");
 		}
@@ -67,15 +69,7 @@ public class SLS {
 		this.solutions = new SolutionList(amountBestSolutions);
 
 		// Generate the first solution
-		int generateInitial = 1;
-		switch (generateInitial) {
-		case 1:
-			this.solutions.add(generateInitialSolutionNaive(vehicles, tasks));
-			break;
-		case 2:
-			this.solutions.add(generateInitialSolutionGreedy(vehicles, tasks));
-			break;
-		}
+		this.solutions.add(generateInitialSolutionNaive(vehicles, tasks));
 
 		SolutionList localMins = this.solutions; // stores the solutions with the lowest cost we've encountered
 
@@ -120,11 +114,11 @@ public class SLS {
 		System.out.println();
 	}
 	
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables,int auctionNumber, Solution priorSolution) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTable,int auctionNumber, Solution priorSolution) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
 		this.amountBestSolutions = amountBestSolutions;
-		this.stateActionTables= stateActionTables;
+		this.stateActionTable= stateActionTable;
 		this.auctionNumber = auctionNumber;
 		int numTasks = tasks.size();
 		if (numTasks<15){
@@ -272,9 +266,17 @@ public class SLS {
 		// Make sure that v2 can carry its new Agenda
 		if (this.canBeCarried(v2, v2Agenda)) {
 			newSimpleVehicleAgendas.put(v1, v1Agenda);
-
 			newSimpleVehicleAgendas.put(v2, v2Agenda);
-			solutions.add(new Solution(newSimpleVehicleAgendas,this.stateActionTables,this.auctionNumber));
+			
+			/*
+			 * Set the future benefit factor.
+			 * If we've gone beyond what we thought would be the max amount of task auctioned, then we set it to 0
+			 */
+			double futureBenefitFactor = 0;
+			if (this.auctionNumber <= this.AMOUNT_AUCTIONED_TASK_AT_THE_END) {
+				futureBenefitFactor = 0.1*(1-((double) this.auctionNumber)/this.AMOUNT_AUCTIONED_TASK_AT_THE_END);
+			}
+			solutions.add(new Solution(newSimpleVehicleAgendas,this.stateActionTable, futureBenefitFactor));
 		}
 
 		return solutions;
@@ -407,60 +409,7 @@ public class SLS {
 			}
 		}
 
-		return new Solution(simpleVehicleAgendas,this.stateActionTables, this.auctionNumber);
-	}
-
-	private Solution generateInitialSolutionGreedy(List<Vehicle> vehicles, TaskSet tasks) {
-
-		ArrayList<Task> pickupTaskList = new ArrayList<Task>();
-		ArrayList<Task> deliveryTaskList = new ArrayList<Task>();
-		// store tasks in a more workable format
-		for (Task task : tasks) {
-			pickupTaskList.add(task);
-		}
-
-		// stores the action of the vehicle
-		HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas = new HashMap<Vehicle, ArrayList<TaskWrapper>>();
-
-		while (!pickupTaskList.isEmpty()) {
-
-			Task task = pickupTaskList.get(0);
-			ArrayList<TaskWrapper> taskWrappers = new ArrayList<TaskWrapper>();
-			taskWrappers.add(new TaskWrapper(task, true));// pickup
-			taskWrappers.add(new TaskWrapper(task, false));// delivery
-
-			// Find the first vehicle who can carry the task
-			Vehicle vehicle = null;
-			for (Vehicle v : vehicles) {
-				if (v.capacity() >= task.weight) {
-					vehicle = v;
-					break;
-				}
-			}
-
-			if (vehicle == null) {
-				throw new IllegalArgumentException("There is a task that cannot be carried by any of the vehicle.");
-			}
-
-			if (simpleVehicleAgendas.containsKey(vehicle)) {
-				// if vehicle key already exists, append actions to
-				// current list
-				simpleVehicleAgendas.get(vehicle).addAll(taskWrappers);
-
-			} else {
-				// if key doesn't exist yet, initialize with a new
-				// arrayList
-				simpleVehicleAgendas.put(vehicle, taskWrappers);
-			}
-			pickupTaskList.remove(0);
-		}
-
-		// initialize other vehicles in solution with empty array lists
-		for (int i = 1; i < vehicles.size(); i++) {
-			simpleVehicleAgendas.put(vehicles.get(i), new ArrayList<TaskWrapper>());
-		}
-
-		return new Solution(simpleVehicleAgendas,this.stateActionTables, this.auctionNumber);
+		return new Solution(simpleVehicleAgendas,this.stateActionTable, this.auctionNumber);
 	}
 
 	@SuppressWarnings("unchecked")
