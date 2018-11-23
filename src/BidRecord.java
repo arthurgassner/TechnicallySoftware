@@ -95,7 +95,7 @@ public class BidRecord {
 		int current_round = 0;
 		for (int id : this.winners) {
 			if (id != friendlyAgentID) {
-				total_reward += Collections.min(this.bids.get(current_round));
+				total_reward += this.bids.get(current_round).get(id);
 			}
 			current_round++;
 		}
