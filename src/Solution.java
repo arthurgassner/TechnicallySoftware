@@ -7,7 +7,6 @@ import logist.plan.Action;
 import logist.plan.Action.Delivery;
 import logist.plan.Action.Move;
 import logist.plan.Action.Pickup;
-import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
@@ -20,12 +19,13 @@ public class Solution {
 	public final double totalCost;
 	public final StateActionTable stateActionTables;
 
-	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTables) {
+	public Solution(HashMap<Vehicle, ArrayList<TaskWrapper>> simpleVehicleAgendas, StateActionTable stateActionTables, int auctionNumber) {
 		this.simpleVehicleAgendas = simpleVehicleAgendas;
 		this.stateActionTables = stateActionTables;
 		this.vehicles = new ArrayList<Vehicle>(simpleVehicleAgendas.keySet());
 		this.vehicleAgendas = this.generateCompleteAgendas(simpleVehicleAgendas);
-		this.totalCost = this.getTotalCost() - 0.01*this.discountCostByFutureBenefit();
+		double future_benefit_factor = 0.1*(1-((double) auctionNumber)/50.0);
+		this.totalCost = this.getTotalCost() - future_benefit_factor*this.discountCostByFutureBenefit();
 	}
 
 	/**

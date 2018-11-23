@@ -12,14 +12,16 @@ import logist.topology.Topology.City;
 public class SLS {
 	private final long startTime;
 	private long currentTime;
+	private int auctionNumber;
 	/*
 	 * List of the best solutions we've seen. The first element is the one with the
 	 * lowest cost
 	 */
 	private SolutionList solutions;
 	private final int amountBestSolutions; // How many "best solutions" we're keeping, i.e. the size of solutions
-	private final double P_LOWER = 1;
+	private final double P_LOWER = .95;
 	private final double P_UPPER = 1;
+	private final long TIME_LIMIT_DECREMENT = 50;
 
 	private int repeatCount = 0;
 	/*
@@ -30,14 +32,36 @@ public class SLS {
 	private StateActionTable stateActionTables;
 	
 
-	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables) {
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables, int auctionNumber) {
 		this.startTime = System.currentTimeMillis();
 		this.currentTime = System.currentTimeMillis();
+		this.auctionNumber = auctionNumber;
 		this.amountBestSolutions = amountBestSolutions;
 		this.stateActionTables= stateActionTables;
-		// Discount the time limit to ensure that a solution is returned
-		timeLimit -= 500; // The other way didn't work somehow - non-integer
-							// time maybe?
+		int numTasks = tasks.size();
+		if (numTasks<15){
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Bingo!");
+		}
+		else if(numTasks<20){
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= 2*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Bango!");
+		}
+		else if(numTasks<28){
+			timeLimit -= 3*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			// time maybe?
+			System.out.println("Bongo!");
+		}
+		else{
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= 4*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Banjo!");
+		}
 
 		// Initialize the solutions
 		this.solutions = new SolutionList(amountBestSolutions);
@@ -62,6 +86,84 @@ public class SLS {
 		System.out.println("The time limit is " + timeLimit);
 		while (diffTime < timeLimit) {
 
+			// Generate neighbors
+			ArrayList<Solution> neighbors = this.generateNeighbours(solutionGeneratingNeighbors);
+			neighbors.add(0, solutionGeneratingNeighbors); // current solution generating neighbors kept in case nothing
+															// is better
+
+			// Find this.amountBestSolutions neighbors with the lowest costs
+			localMins = this.getLocalMin(neighbors, this.amountBestSolutions);
+			
+			/*
+			 * If the solution within the neighbors with the lowest cost has a cost <=
+			 * than the cost of the solution within this.solutions with the highest cost,
+			 * then we need to merge localMins INTO this.solutions
+			 */
+			if (localMins.getFirstSolution().totalCost <= this.solutions.getLastSolution().totalCost) {
+				// Merge localMins and this.solutions
+				this.solutions.addAll(localMins.getAll());
+				this.repeatCount = 0;
+			} else {
+				this.repeatCount++;
+			}
+
+			// Choose which solution to use to generate neighbors
+			solutionGeneratingNeighbors = this.localChoice(neighbors, localMins.getFirstSolution(), solutionGeneratingNeighbors);
+			diffTime = System.currentTimeMillis() - this.startTime;
+		}
+		
+		System.out.print("FINAL COSTS : ");
+		for (Solution s : this.solutions.getAll()) {
+			System.out.print(s.totalCost);
+			System.out.print(" - ");
+		}
+		System.out.println();
+	}
+	
+	public SLS(List<Vehicle> vehicles, TaskSet tasks, long timeLimit, int amountBestSolutions, StateActionTable stateActionTables,int auctionNumber, Solution priorSolution) {
+		this.startTime = System.currentTimeMillis();
+		this.currentTime = System.currentTimeMillis();
+		this.amountBestSolutions = amountBestSolutions;
+		this.stateActionTables= stateActionTables;
+		this.auctionNumber = auctionNumber;
+		int numTasks = tasks.size();
+		if (numTasks<15){
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Bingo!");
+		}
+		else if(numTasks<20){
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= 2*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Bango!");
+		}
+		else if(numTasks<28){
+			timeLimit -= 3*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			// time maybe?
+			System.out.println("Bongo!");
+		}
+		else{
+			// Discount the time limit to ensure that a solution is returned
+			timeLimit -= 4*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+								// time maybe?
+			System.out.println("Banjo!");
+		}
+		// Initialize the solutions
+		this.solutions = new SolutionList(amountBestSolutions);
+
+		this.solutions.add(priorSolution);
+		
+		SolutionList localMins = this.solutions; // stores the solutions with the lowest cost we've encountered
+
+		// This is the solution that will be used to generate neighbors
+		Solution solutionGeneratingNeighbors = this.solutions.getFirstSolution();
+
+		double diffTime = this.currentTime - this.startTime;
+		System.out.println("The time limit is " + timeLimit);
+
+		while (diffTime < timeLimit) {
 			// Generate neighbors
 			ArrayList<Solution> neighbors = this.generateNeighbours(solutionGeneratingNeighbors);
 			neighbors.add(0, solutionGeneratingNeighbors); // current solution generating neighbors kept in case nothing
@@ -172,7 +274,7 @@ public class SLS {
 			newSimpleVehicleAgendas.put(v1, v1Agenda);
 
 			newSimpleVehicleAgendas.put(v2, v2Agenda);
-			solutions.add(new Solution(newSimpleVehicleAgendas,this.stateActionTables));
+			solutions.add(new Solution(newSimpleVehicleAgendas,this.stateActionTables,this.auctionNumber));
 		}
 
 		return solutions;
@@ -305,7 +407,7 @@ public class SLS {
 			}
 		}
 
-		return new Solution(simpleVehicleAgendas,this.stateActionTables);
+		return new Solution(simpleVehicleAgendas,this.stateActionTables, this.auctionNumber);
 	}
 
 	private Solution generateInitialSolutionGreedy(List<Vehicle> vehicles, TaskSet tasks) {
@@ -358,7 +460,7 @@ public class SLS {
 			simpleVehicleAgendas.put(vehicles.get(i), new ArrayList<TaskWrapper>());
 		}
 
-		return new Solution(simpleVehicleAgendas,this.stateActionTables);
+		return new Solution(simpleVehicleAgendas,this.stateActionTables, this.auctionNumber);
 	}
 
 	@SuppressWarnings("unchecked")
