@@ -1,0 +1,15 @@
+Make sure to refresh the project
+
+In eclipse : File > Export
+
+Double click on "JAR file"
+
+Tick the box on the left of "auction"
+
+Make sure the export destination is 'auction/agents/xxx.jar'
+
+--
+
+Then run the commands that are in the Moodle 
+
+
