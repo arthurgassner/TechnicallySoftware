@@ -21,7 +21,7 @@ public class SLS {
 	private final int amountBestSolutions; // How many "best solutions" we're keeping, i.e. the size of solutions
 	private final double P_LOWER = .95;
 	private final double P_UPPER = 1;
-	private final long TIME_LIMIT_DECREMENT = 100;
+	private final long TIME_LIMIT_DECREMENT = 60;
 
 	private int repeatCount = 0;
 	/*
@@ -58,7 +58,7 @@ public class SLS {
 		}
 		else{
 			// Discount the time limit to ensure that a solution is returned
-			timeLimit -= 4*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= 6*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 								// time maybe?
 			System.out.println("Banjo!");
 		}
@@ -146,7 +146,7 @@ public class SLS {
 		}
 		else{
 			// Discount the time limit to ensure that a solution is returned
-			timeLimit -= 4*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
+			timeLimit -= 6*TIME_LIMIT_DECREMENT; // The other way didn't work somehow - non-integer
 								// time maybe?
 			System.out.println("Banjo!");
 		}
